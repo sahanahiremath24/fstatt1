@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusShare | College Resource Sharing Platform</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --panel-soft: #eef4ff;
+      --primary: #2d5bff;
+      --primary-dark: #1d3fbf;
+      --secondary: #22c55e;
+      --accent: #ffb020;
+      --text: #162033;
+      --muted: #5d6b82;
+      --border: rgba(17, 24, 39, 0.08);
+      --shadow: 0 18px 45px rgba(34, 58, 120, 0.12);
+      --success: #eafaf0;
+      --warning: #fff6e5;
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, #f7faff 0%, #eef4ff 100%);
+      color: var(--text);
+    }
+
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(14px);
+      background: rgba(244, 247, 251, 0.82);
+      border-bottom: 1px solid rgba(17, 24, 39, 0.05);
+      z-index: 50;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 78px;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      font-size: 1.4rem;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary) 0%, #7a9dff 100%);
+      color: white;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 0.9rem 1.35rem;
+      font-weight: 700;
+      transition: 0.25s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #fff;
+      box-shadow: 0 14px 26px rgba(45, 91, 255, 0.25);
+    }
+
+    .btn-primary:hover { transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: rgba(45, 91, 255, 0.08);
+      color: var(--primary);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.62);
+      z-index: 200;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(420px, 100%);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.5rem;
+      letter-spacing: -0.04em;
+    }
+
+    .close-btn {
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(22, 32, 51, 0.05);
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 20px 22px 22px;
+    }
+
+    .form-group {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .form-group input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem 0.95rem;
+      font: inherit;
+      background: rgba(245, 248, 255, 0.95);
+      color: var(--text);
+    }
+
+    .form-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .helper-text {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .form-message {
+      margin-top: 14px;
+      min-height: 20px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .form-message.error {
+      color: #d93025;
+    }
+
+    .form-message.success {
+      color: #188a42;
+    }
+
+    .account-panel {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.62);
+      z-index: 200;
+    }
+
+    .account-panel.open {
+      display: flex;
+    }
+
+    .account-card {
+      width: min(420px, 100%);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .account-card h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 1.7rem;
+      letter-spacing: -0.04em;
+    }
+
+    .account-card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .hero {
+      padding: 72px 0 35px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.18fr 0.82fr;
+      gap: 26px;
+      align-items: center;
+    }
+
+    .hero-copy h1 {
+      margin: 0 0 18px;
+      font-size: clamp(2.7rem, 5vw, 4.5rem);
+      line-height: 1.02;
+      letter-spacing: -0.07em;
+    }
+
+    .hero-copy p {
+      margin: 0 0 28px;
+      font-size: 1.08rem;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 600px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .stat {
+      min-width: 130px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.5rem;
+      letter-spacing: -0.04em;
+      margin-bottom: 4px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .hero-visual {
+      position: relative;
+      background: linear-gradient(145deg, rgba(45, 91, 255, 0.08), rgba(34, 197, 94, 0.08));
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .dashboard {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(246, 249, 255, 0.85);
+    }
+
+    .dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    .dot.red { background: #ff6b6b; }
+    .dot.yellow { background: #ffba4d; }
+    .dot.green { background: #52c96e; }
+
+    .dashboard-body {
+      padding: 24px 22px 18px;
+    }
+
+    .mini-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .mini-card {
+      background: linear-gradient(135deg, #fefefe 0%, #eef4ff 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 12px;
+    }
+
+    .mini-card strong {
+      display: block;
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+
+    .mini-card span {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .big-card {
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(45, 91, 255, 0.12), rgba(34, 197, 94, 0.12));
+      border: 1px solid rgba(45, 91, 255, 0.1);
+    }
+
+    .big-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .bar-group {
+      display: flex;
+      align-items: end;
+      gap: 10px;
+      height: 104px;
+      margin-top: 12px;
+    }
+
+    .bar {
+      flex: 1;
+      border-radius: 10px 10px 0 0;
+      background: linear-gradient(180deg, var(--primary) 0%, #85a5ff 100%);
+      min-height: 18%;
+      position: relative;
+    }
+
+    .bar:nth-child(2) { height: 48%; }
+    .bar:nth-child(3) { height: 68%; }
+    .bar:nth-child(4) { height: 84%; }
+    .bar:nth-child(5) { height: 58%; }
+    .bar:nth-child(6) { height: 98%; }
+
+    .panel {
+      margin: 22px 0 80px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-inner {
+      padding: 30px 28px 36px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+      letter-spacing: -0.05em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin: 14px 0 24px;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+      max-width: 460px;
+    }
+
+    .search-box input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(245, 248, 255, 0.92);
+      padding: 0.92rem 1rem 0.92rem 2.9rem;
+      font-size: 0.98rem;
+      color: var(--text);
+      outline: none;
+    }
+
+    .search-box::before {
+      content: "⌕";
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 1.35rem;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: rgba(22, 32, 51, 0.04);
+      color: var(--muted);
+      border: 1px solid transparent;
+      padding: 0.72rem 1rem;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .filter-btn.active {
+      background: rgba(45, 91, 255, 0.1);
+      color: var(--primary);
+      border-color: rgba(45, 91, 255, 0.08);
+    }
+
+    .resources-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .resource-card {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 22px rgba(15, 23, 42, 0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .resource-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 28px rgba(40, 59, 130, 0.12);
+    }
+
+    .resource-thumb {
+      height: 150px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      padding: 18px;
+      background: linear-gradient(135deg, rgba(45, 91, 255, 0.92), rgba(124, 148, 255, 0.72));
+      color: white;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      font-size: 1.1rem;
+    }
+
+    .resource-card:nth-child(2) .resource-thumb {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.92), rgba(95, 202, 125, 0.72));
+    }
+
+    .resource-card:nth-child(3) .resource-thumb {
+      background: linear-gradient(135deg, rgba(255, 176, 32, 0.95), rgba(255, 202, 94, 0.7));
+      color: #132238;
+    }
+
+    .resource-card:nth-child(4) .resource-thumb {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.92), rgba(167, 139, 250, 0.72));
+    }
+
+    .resource-card:nth-child(5) .resource-thumb {
+      background: linear-gradient(135deg, rgba(20, 184, 166, 0.92), rgba(45, 212, 191, 0.74));
+    }
+
+    .resource-card:nth-child(6) .resource-thumb {
+      background: linear-gradient(135deg, rgba(248, 113, 113, 0.9), rgba(251, 146, 60, 0.7));
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.4rem 0.72rem;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .resource-content {
+      padding: 18px 18px 20px;
+    }
+
+    .resource-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .resource-content h3 {
+      margin: 0 0 8px;
+      font-size: 1.28rem;
+      letter-spacing: -0.04em;
+    }
+
+    .resource-content p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.96rem;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: rgba(45, 91, 255, 0.08);
+      color: var(--primary);
+      padding: 0.44rem 0.62rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .resource-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .downloads {
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .action-link {
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+      margin-top: 12px;
+    }
+
+    .step {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 20px;
+    }
+
+    .step-number {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: rgba(45, 91, 255, 0.08);
+      color: var(--primary);
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .step h3 {
+      margin: 0 0 12px;
+      font-size: 1.3rem;
+      letter-spacing: -0.04em;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .community {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      margin-top: 20px;
+    }
+
+    .community-card {
+      background: linear-gradient(135deg, rgba(45, 91, 255, 0.08), rgba(34, 197, 94, 0.08));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px;
+    }
+
+    .community-card h3 {
+      margin: 0 0 10px;
+      font-size: clamp(1.7rem, 2.8vw, 2.5rem);
+      letter-spacing: -0.05em;
+    }
+
+    .community-card p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .upload-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      box-shadow: 0 12px 22px rgba(15, 23, 42, 0.05);
+    }
+
+    .upload-box label {
+      display: grid;
+      gap: 6px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .upload-box input, .upload-box textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.8rem 0.9rem;
+      font: inherit;
+      background: rgba(245,248,255,0.95);
+      color: var(--text);
+    }
+
+    .upload-box textarea { min-height: 110px; resize: vertical; }
+
+    .status-banner {
+      display: none;
+      margin-top: 12px;
+      padding: 0.8rem 0.9rem;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .status-banner.show {
+      display: block;
+    }
+
+    .status-banner.success {
+      background: var(--success);
+      color: #17633a;
+    }
+
+    .status-banner.error {
+      background: #fde7e7;
+      color: #b42318;
+    }
+
+    .testimonial {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stars {
+      color: #fbbf24;
+      letter-spacing: 0.2em;
+      font-size: 1.1rem;
+    }
+
+    .person {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .avatar {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #dfe9ff, #cfe8d9);
+      color: var(--primary-dark);
+      font-weight: 800;
+    }
+
+    .person strong { display: block; }
+    .person span { color: var(--muted); font-size: 0.85rem; }
+
+    footer {
+      padding: 24px 0 50px;
+      color: var(--muted);
+    }
+
+    .footer-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border-top: 1px solid var(--border);
+      padding-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 960px) {
+      .hero-grid,
+      .community,
+      .resources-grid,
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        padding-top: 44px;
+      }
+
+      .nav {
+        height: auto;
+        padding: 14px 0;
+        flex-wrap: wrap;
+      }
+
+      .nav-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .mini-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .hero-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <div class="brand">
+        <div class="brand-mark">C</div>
+        <span>CampusShare</span>
+      </div>
+
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#resources">Resources</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#community">Community</a>
+        <a href="#upload">Upload</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button id="loginBtn" class="btn btn-secondary" type="button">Log in</button>
+        <button id="joinBtn" class="btn btn-primary" type="button">Join free</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="loginModal" class="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <div class="modal-header">
+        <h3 id="authTitle">Welcome back</h3>
+        <button id="closeModalBtn" class="close-btn" type="button" aria-label="Close login popup">×</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="emailInput">College email</label>
+            <input id="emailInput" type="email" placeholder="name@college.edu" required />
+          </div>
+
+          <div class="form-group">
+            <label for="passwordInput">Password</label>
+            <input id="passwordInput" type="password" placeholder="Enter your password" required />
+          </div>
+
+          <div class="form-footer">
+            <span class="helper-text">Use a campus email to keep your sharing profile active.</span>
+            <button class="btn btn-primary" type="submit">Sign in</button>
+          </div>
+
+          <div id="formMessage" class="form-message" aria-live="polite"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="accountPanel" class="account-panel" aria-hidden="true">
+    <div class="account-card" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+      <div class="modal-header" style="padding: 0 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 18px;">
+        <h3 id="accountTitle">My account</h3>
+        <button id="closeAccountBtn" class="close-btn" type="button" aria-label="Close account panel">×</button>
+      </div>
+      <p><strong>Student:</strong> <span id="accountName">CampusShare User</span></p>
+      <p><strong>Email:</strong> <span id="accountEmail">student@campusshare.edu</span></p>
+      <p><strong>Status:</strong> Active member</p>
+      <button id="logoutBtn" class="btn btn-secondary" type="button" style="margin-top: 12px;">Log out</button>
+    </div>
+  </div>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <h1>Share what helps. Learn faster.</h1>
+          <p>
+            CampusShare is the student-first platform for swapping notes, exam papers,
+            lab manuals, and project resources across departments and semesters.
+          </p>
+
+          <div class="hero-actions">
+            <button id="exploreBtn" class="btn btn-primary" type="button">Explore resources</button>
+            <button id="uploadBtn" class="btn btn-secondary" type="button">Upload a file</button>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat">
+              <strong>18k+</strong>
+              <span>Shared files</span>
+            </div>
+            <div class="stat">
+              <strong>4.9/5</strong>
+              <span>Student rating</span>
+            </div>
+            <div class="stat">
+              <strong>96%</strong>
+              <span>Helpful matches</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-label="Platform dashboard preview">
+          <div class="dashboard">
+            <div class="dashboard-header">
+              <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+              </div>
+              <strong>Resource insights</strong>
+            </div>
+
+            <div class="dashboard-body">
+              <div class="mini-cards">
+                <div class="mini-card">
+                  <strong>2.1k</strong>
+                  <span>Notes</span>
+                </div>
+                <div class="mini-card">
+                  <strong>860</strong>
+                  <span>Papers</span>
+                </div>
+                <div class="mini-card">
+                  <strong>510</strong>
+                  <span>Projects</span>
+                </div>
+              </div>
+
+              <div class="big-card">
+                <div class="big-card-header">
+                  <span>Weekly activity</span>
+                  <span>+28%</span>
+                </div>
+                <div class="bar-group" aria-hidden="true">
+                  <span class="bar"></span>
+                  <span class="bar"></span>
+                  <span class="bar"></span>
+                  <span class="bar"></span>
+                  <span class="bar"></span>
+                  <span class="bar"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container panel" id="resources">
+      <div class="panel-inner">
+        <div class="section-head">
+          <div>
+            <h2>Popular resources</h2>
+          </div>
+          <p>Find the best files shared by students across your campus.</p>
+        </div>
+
+        <div class="search-row">
+          <div class="search-box">
+            <input id="searchInput" type="text" placeholder="Search notes, subjects, or courses..." aria-label="Search resources" />
+          </div>
+
+          <div class="filters" aria-label="Resource categories">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="notes">Notes</button>
+            <button class="filter-btn" data-filter="papers">Papers</button>
+            <button class="filter-btn" data-filter="projects">Projects</button>
+            <button class="filter-btn" data-filter="books">Books</button>
+          </div>
+        </div>
+
+        <div class="resources-grid" id="resourceGrid">
+          <article class="resource-card" data-category="notes">
+            <div class="resource-thumb">
+              <span>CS101</span>
+              <span class="badge">Notes</span>
+            </div>
+            <div class="resource-content">
+              <div class="resource-meta">
+                <span>Computer Science</span>
+                <span>2 days ago</span>
+              </div>
+              <h3>Data Structures Quick Revision</h3>
+              <p>Concise theory, algorithms, and interview practice questions for midterm preparation.</p>
+              <div class="tags">
+                <span class="tag">DSA</span>
+                <span class="tag">Semester 2</span>
+              </div>
+              <div class="resource-footer">
+                <span class="downloads">1.4k downloads</span>
+                <a href="#" class="action-link">Open →</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="resource-card" data-category="papers">
+            <div class="resource-thumb">
+              <span>ENG201</span>
+              <span class="badge">Papers</span>
+            </div>
+            <div class="resource-content">
+              <div class="resource-meta">
+                <span>Engineering</span>
+                <span>1 week ago</span>
+              </div>
+              <h3>Applied Mathematics Previous Papers</h3>
+              <p>Set of solved exam papers covering probability, calculus, and linear algebra patterns.</p>
+              <div class="tags">
+                <span class="tag">Exam prep</span>
+                <span class="tag">Solved</span>
+              </div>
+              <div class="resource-footer">
+                <span class="downloads">960 downloads</span>
+                <a href="#" class="action-link">Open →</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="resource-card" data-category="projects">
+            <div class="resource-thumb">
+              <span>IT302</span>
+              <span class="badge">Projects</span>
+            </div>
+            <div class="resource-content">
+              <div class="resource-meta">
+                <span>Information Tech</span>
+                <span>3 days ago</span>
+              </div>
+              <h3>Smart Attendance System Prototype</h3>
+              <p>Full-stack mini project with end-to-end flow, UI screenshots, testing notes, and source files.</p>
+              <div class="tags">
+                <span class="tag">UI/UX</span>
+                <span class="tag">JavaScript</span>
+              </div>
+              <div class="resource-footer">
+                <span class="downloads">723 downloads</span>
+                <a href="#" class="action-link">Open →</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="resource-card" data-category="books">
+            <div class="resource-thumb">
+              <span>PHY110</span>
+              <span class="badge">Books</span>
+            </div>
+            <div class="resource-content">
+              <div class="resource-meta">
+                <span>Science</span>
+                <span>5 days ago</span>
+              </div>
+              <h3>Physics Lab Manual Bundle</h3>
+              <p>Experiment guides, calculations, and worksheets for practicals and viva rounds.</p>
+              <div class="tags">
+                <span class="tag">Lab</span>
+                <span class="tag">Practical</span>
+              </div>
+              <div class="resource-footer">
+                <span class="downloads">1.1k downloads</span>
+                <a href="#" class="action-link">Open →</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="resource-card" data-category="notes">
+            <div class="resource-thumb">
+              <span>ECO204</span>
+              <span class="badge">Notes</span>
+            </div>
+            <div class="resource-content">
+              <div class="resource-meta">
+                <span>Business</span>
+                <span>4 days ago</span>
+              </div>
+              <h3>Microeconomics Summary Sheets</h3>
+              <p>Semester-end cheat sheets for key graphs, formulas, and concept comparisons.</p>
+              <div class="tags">
+                <span class="tag">Economics</span>
+                <span class="tag">Revision</span>
+              </div>
+              <div class="resource-footer">
+                <span class="downloads">834 downloads</span>
+                <a href="#" class="action-link">Open →</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="resource-card" data-category="papers">
+            <div class="resource-thumb">
+              <span>BIO220</span>
+              <span class="badge">Papers</span>
+            </div>
+            <div class="resource-content">
+              <div class="resource-meta">
+                <span>Life Science</span>
+                <span>6 days ago</span>
+              </div>
+              <h3>Biology Sem Exam Question Bank</h3>
+              <p>Topically organized papers with long-answer hints and model responses.</p>
+              <div class="tags">
+                <span class="tag">Biology</span>
+                <span class="tag">Question bank</span>
+              </div>
+              <div class="resource-footer">
+                <span class="downloads">690 downloads</span>
+                <a href="#" class="action-link">Open →</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="container" id="how-it-works">
+      <div class="section-head">
+        <div>
+          <h2>How it works</h2>
+        </div>
+        <p>Simple steps to get help and give back to your campus community.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Browse resources</h3>
+          <p>Search by course, subject, or category to discover helpful notes, previous papers, and guides.</p>
+        </div>
+
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Share with peers</h3>
+          <p>Upload your own documents, summary sheets, and project files to help students in future batches.</p>
+        </div>
+
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Build a smarter campus</h3>
+          <p>Vote, save favorites, and contribute to a growing academic knowledge network.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="container panel" id="community">
+      <div class="panel-inner community">
+        <div class="community-card">
+          <h3>Everyone contributes. Everyone gains.</h3>
+          <p>
+            CampusShare brings departments together by making study material easier to discover,
+            share, and reuse. From first-year fundamentals to final-year projects, students can build
+            a stronger learning ecosystem together.
+          </p>
+          <button class="btn btn-primary">Start sharing</button>
+        </div>
+
+        <div class="testimonial">
+          <div class="stars">★★★★★</div>
+          <p>
+            “I found my finals revision notes and a solved paper bank in one place. It saved me hours of searching and helped me pass with confidence.”
+          </p>
+          <div class="person">
+            <div class="avatar">AS</div>
+            <div>
+              <strong>Aisha S.</strong>
+              <span>Computer Science student</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container" id="upload">
+      <div class="section-head">
+        <div>
+          <h2>Upload a resource</h2>
+        </div>
+        <p>Share useful academic material with your classmates.</p>
+      </div>
+
+      <div class="community-card" style="padding: 24px; margin-bottom: 24px;">
+        <div class="upload-box">
+          <label>
+            Resource title
+            <input id="resourceTitle" type="text" placeholder="e.g. Database Design Notes" />
+          </label>
+
+          <label>
+            Course / subject
+            <input id="resourceCourse" type="text" placeholder="e.g. CSE 305" />
+          </label>
+
+          <label>
+            Description
+            <textarea id="resourceDescription" placeholder="Briefly describe what this resource includes and why it is useful."></textarea>
+          </label>
+
+          <button id="submitResourceBtn" class="btn btn-primary" type="button" style="width: fit-content;">Submit resource</button>
+          <div id="uploadStatus" class="status-banner" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-box">
+      <div class="brand">
+        <div class="brand-mark">C</div>
+        <span>CampusShare</span>
+      </div>
+      <span>© 2026 CampusShare. Built for student collaboration.</span>
+    </div>
+  </footer>
+
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.resource-card');
+    const loginModal = document.getElementById('loginModal');
+    const accountPanel = document.getElementById('accountPanel');
+    const loginBtn = document.getElementById('loginBtn');
+    const joinBtn = document.getElementById('joinBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const closeAccountBtn = document.getElementById('closeAccountBtn');
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const formMessage = document.getElementById('formMessage');
+    const authTitle = document.getElementById('authTitle');
+    const accountName = document.getElementById('accountName');
+    const accountEmail = document.getElementById('accountEmail');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const exploreBtn = document.getElementById('exploreBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const submitResourceBtn = document.getElementById('submitResourceBtn');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const resourceTitle = document.getElementById('resourceTitle');
+    const resourceCourse = document.getElementById('resourceCourse');
+    const resourceDescription = document.getElementById('resourceDescription');
+
+    let activeFilter = 'all';
+
+    function applyFilters() {
+      const query = searchInput.value.trim().toLowerCase();
+
+      cards.forEach((card) => {
+        const category = card.dataset.category;
+        const text = card.textContent.toLowerCase();
+        const matchesCategory = activeFilter === 'all' || category === activeFilter;
+        const matchesQuery = !query || text.includes(query);
+
+        card.style.display = matchesCategory && matchesQuery ? 'block' : 'none';
+      });
+    }
+
+    function openModal(mode = 'login') {
+      const isSignup = mode === 'signup';
+      authTitle.textContent = isSignup ? 'Create your account' : 'Welcome back';
+      emailInput.value = '';
+      passwordInput.value = '';
+      formMessage.textContent = '';
+      formMessage.className = 'form-message';
+      loginModal.classList.add('open');
+      loginModal.setAttribute('aria-hidden', 'false');
+      emailInput.focus();
+    }
+
+    function closeModal() {
+      loginModal.classList.remove('open');
+      loginModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function setLoggedInState(email) {
+      const displayName = email.split('@')[0].replace(/[._-]/g, ' ');
+      const formattedName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+      loginBtn.textContent = 'Log in';
+      joinBtn.textContent = 'My account';
+      joinBtn.disabled = false;
+      joinBtn.style.opacity = '1';
+      loginBtn.setAttribute('title', `Sign in as another user`);
+      joinBtn.setAttribute('title', `Signed in as ${email}`);
+      accountName.textContent = formattedName || 'CampusShare User';
+      accountEmail.textContent = email;
+      localStorage.setItem('campusShareUser', JSON.stringify({ email }));
+    }
+
+    function openAccountPanel() {
+      if (!localStorage.getItem('campusShareUser')) return;
+      const savedUser = JSON.parse(localStorage.getItem('campusShareUser'));
+      accountName.textContent = savedUser.email ? savedUser.email.split('@')[0].replace(/[._-]/g, ' ') : 'CampusShare User';
+      accountEmail.textContent = savedUser.email || 'student@campusshare.edu';
+      accountPanel.classList.add('open');
+      accountPanel.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeAccountPanel() {
+      accountPanel.classList.remove('open');
+      accountPanel.setAttribute('aria-hidden', 'true');
+    }
+
+    function restoreSession() {
+      const savedUser = localStorage.getItem('campusShareUser');
+      if (!savedUser) return;
+
+      try {
+        const user = JSON.parse(savedUser);
+        if (user.email) {
+          setLoggedInState(user.email);
+        }
+      } catch (error) {
+        localStorage.removeItem('campusShareUser');
+      }
+    }
+
+    function showUploadStatus(message, type) {
+      uploadStatus.textContent = message;
+      uploadStatus.className = `status-banner show ${type}`;
+    }
+
+    function submitResource() {
+      const title = resourceTitle.value.trim();
+      const course = resourceCourse.value.trim();
+      const description = resourceDescription.value.trim();
+
+      if (!localStorage.getItem('campusShareUser')) {
+        showUploadStatus('Please log in before uploading a resource.', 'error');
+        openModal('login');
+        return;
+      }
+
+      if (!title || !course || !description) {
+        showUploadStatus('Please fill in the title, course, and description.', 'error');
+        return;
+      }
+
+      showUploadStatus('Resource uploaded successfully. It is now available for your classmates.', 'success');
+      resourceTitle.value = '';
+      resourceCourse.value = '';
+      resourceDescription.value = '';
+    }
+
+    function logOutUser() {
+      localStorage.removeItem('campusShareUser');
+      loginBtn.textContent = 'Log in';
+      joinBtn.textContent = 'Join free';
+      joinBtn.disabled = false;
+      joinBtn.style.opacity = '1';
+      closeAccountPanel();
+    }
+
+    function loginUser(event) {
+      event.preventDefault();
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!email || !password) {
+        formMessage.textContent = 'Please enter both your email and password.';
+        formMessage.className = 'form-message error';
+        return;
+      }
+
+      const validEmail = /@.*\.(edu|ac\.in|college)$/i.test(email);
+      const validCredentials = email.toLowerCase() === 'student@campusshare.edu' && password === 'campus123';
+
+      if (!validEmail) {
+        formMessage.textContent = 'Use a valid college email address to continue.';
+        formMessage.className = 'form-message error';
+        return;
+      }
+
+      if (!validCredentials) {
+        formMessage.textContent = 'Invalid login details. Try student@campusshare.edu with password campus123.';
+        formMessage.className = 'form-message error';
+        return;
+      }
+
+      setLoggedInState(email);
+      formMessage.textContent = 'Login successful. Welcome back!';
+      formMessage.className = 'form-message success';
+
+      setTimeout(() => {
+        closeModal();
+      }, 900);
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        filterButtons.forEach((btn) => btn.classList.remove('active'));
+        button.classList.add('active');
+        activeFilter = button.dataset.filter;
+        applyFilters();
+      });
+    });
+
+    loginBtn.addEventListener('click', () => {
+      openModal('login');
+    });
+
+    joinBtn.addEventListener('click', () => {
+      const signedIn = localStorage.getItem('campusShareUser');
+      if (signedIn) {
+        openAccountPanel();
+      } else {
+        openModal('signup');
+      }
+    });
+
+    exploreBtn.addEventListener('click', () => {
+      document.getElementById('resources').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    uploadBtn.addEventListener('click', () => {
+      if (!localStorage.getItem('campusShareUser')) {
+        openModal('login');
+        formMessage.textContent = 'Please log in to upload a resource.';
+        formMessage.className = 'form-message error';
+        return;
+      }
+      document.getElementById('upload').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    submitResourceBtn.addEventListener('click', submitResource);
+
+    closeModalBtn.addEventListener('click', closeModal);
+    closeAccountBtn.addEventListener('click', closeAccountPanel);
+    loginModal.addEventListener('click', (event) => {
+      if (event.target === loginModal) closeModal();
+    });
+    accountPanel.addEventListener('click', (event) => {
+      if (event.target === accountPanel) closeAccountPanel();
+    });
+    loginForm.addEventListener('submit', loginUser);
+    logoutBtn.addEventListener('click', logOutUser);
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        if (loginModal.classList.contains('open')) closeModal();
+        if (accountPanel.classList.contains('open')) closeAccountPanel();
+      }
+    });
+
+    restoreSession();
+  </script>
+</body>
+</html>
