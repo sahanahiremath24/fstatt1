@@ -146,6 +146,8 @@
       overflow: hidden;
     }
 
+    .resource-modal-card { width: min(560px, 100%); }
+
     .modal-header {
       display: flex;
       align-items: center;
@@ -727,7 +729,7 @@
       color: var(--muted);
     }
 
-    .upload-box input, .upload-box textarea {
+    .upload-box input, .upload-box textarea, .upload-box select {
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -922,6 +924,19 @@
     </div>
   </div>
 
+  <div id="resourceModal" class="modal" aria-hidden="true">
+    <div class="modal-card resource-modal-card" role="dialog" aria-modal="true" aria-labelledby="resourceModalTitle">
+      <div class="modal-header">
+        <h3 id="resourceModalTitle"></h3>
+        <button id="closeResourceModalBtn" class="close-btn" type="button" aria-label="Close resource details">×</button>
+      </div>
+      <div class="modal-body">
+        <p id="resourceModalCourse" class="helper-text"></p>
+        <p id="resourceModalDescription"></p>
+      </div>
+    </div>
+  </div>
+
   <main>
     <section class="hero">
       <div class="container hero-grid">
@@ -1023,6 +1038,7 @@
           </div>
         </div>
 
+        <div id="resourceListStatus" class="form-message" aria-live="polite"></div>
         <div class="resources-grid" id="resourceGrid">
           <article class="resource-card" data-category="notes">
             <div class="resource-thumb">
@@ -1243,8 +1259,23 @@
           </label>
 
           <label>
+            Resource category
+            <select id="resourceCategory" required>
+              <option value="notes">Notes</option>
+              <option value="papers">Papers</option>
+              <option value="projects">Projects</option>
+              <option value="books">Books</option>
+            </select>
+          </label>
+
+          <label>
             Description
             <textarea id="resourceDescription" placeholder="Briefly describe what this resource includes and why it is useful."></textarea>
+          </label>
+
+          <label>
+            Document (optional, PDF, TXT, DOC, DOCX, PPT or PPTX; max 8 MB)
+            <input id="resourceFile" type="file" accept=".pdf,.txt,.doc,.docx,.ppt,.pptx" />
           </label>
 
           <button id="submitResourceBtn" class="btn btn-primary" type="button" style="width: fit-content;">Submit resource</button>
@@ -1267,13 +1298,18 @@
   <script>
     const searchInput = document.getElementById('searchInput');
     const filterButtons = document.querySelectorAll('.filter-btn');
-    const cards = document.querySelectorAll('.resource-card');
+    let cards = Array.from(document.querySelectorAll('.resource-card'));
     const loginModal = document.getElementById('loginModal');
     const accountPanel = document.getElementById('accountPanel');
     const loginBtn = document.getElementById('loginBtn');
     const joinBtn = document.getElementById('joinBtn');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const closeAccountBtn = document.getElementById('closeAccountBtn');
+    const resourceModal = document.getElementById('resourceModal');
+    const closeResourceModalBtn = document.getElementById('closeResourceModalBtn');
+    const resourceModalTitle = document.getElementById('resourceModalTitle');
+    const resourceModalCourse = document.getElementById('resourceModalCourse');
+    const resourceModalDescription = document.getElementById('resourceModalDescription');
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('emailInput');
     const passwordInput = document.getElementById('passwordInput');
@@ -1289,8 +1325,45 @@
     const resourceTitle = document.getElementById('resourceTitle');
     const resourceCourse = document.getElementById('resourceCourse');
     const resourceDescription = document.getElementById('resourceDescription');
+    const resourceCategory = document.getElementById('resourceCategory');
+    const resourceFile = document.getElementById('resourceFile');
+    const resourceGrid = document.getElementById('resourceGrid');
+    const resourceListStatus = document.getElementById('resourceListStatus');
+    const apiBaseUrl = window.location.port === '3000' ? '' : 'http://localhost:3000';
 
     let activeFilter = 'all';
+
+    async function apiRequest(url, options = {}) {
+      const headers = { ...options.headers };
+      if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
+      const response = await fetch(`${apiBaseUrl}${url}`, { ...options, headers });
+      const responseText = await response.text();
+      let result;
+
+      try {
+        result = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        result = null;
+      }
+
+      if (!result || typeof result !== 'object') {
+        const error = new Error(
+          `The server returned an invalid response (HTTP ${response.status}). Start the app with "npm start" and open http://localhost:3000.`
+        );
+        error.status = response.status;
+        throw error;
+      }
+
+      if (!response.ok) {
+        const error = new Error(result.error || `The request failed (HTTP ${response.status}).`);
+        error.status = response.status;
+        throw error;
+      }
+
+      return result;
+    }
 
     function applyFilters() {
       const query = searchInput.value.trim().toLowerCase();
@@ -1303,6 +1376,99 @@
 
         card.style.display = matchesCategory && matchesQuery ? 'block' : 'none';
       });
+    }
+
+    function showResourceDetails(resource) {
+      resourceModalTitle.textContent = resource.title;
+      resourceModalCourse.textContent = `${resource.course} · ${resource.category}`;
+      resourceModalDescription.textContent = resource.description;
+      resourceModal.classList.add('open');
+      resourceModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeResourceDetails() {
+      resourceModal.classList.remove('open');
+      resourceModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function createResourceCard(resource) {
+      const card = document.createElement('article');
+      card.className = 'resource-card';
+      card.dataset.category = resource.category;
+      card.dataset.sharedResource = 'true';
+
+      const thumb = document.createElement('div');
+      thumb.className = 'resource-thumb';
+      const courseCode = document.createElement('span');
+      courseCode.textContent = resource.course;
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = resource.category[0].toUpperCase() + resource.category.slice(1);
+      thumb.append(courseCode, badge);
+
+      const content = document.createElement('div');
+      content.className = 'resource-content';
+      const meta = document.createElement('div');
+      meta.className = 'resource-meta';
+      const sharedBy = document.createElement('span');
+      sharedBy.textContent = 'Shared by a student';
+      const date = document.createElement('span');
+      date.textContent = new Date(resource.createdAt).toLocaleDateString();
+      meta.append(sharedBy, date);
+
+      const title = document.createElement('h3');
+      title.textContent = resource.title;
+      const description = document.createElement('p');
+      description.textContent = resource.description;
+      const tags = document.createElement('div');
+      tags.className = 'tags';
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = resource.hasFile ? resource.fileName : 'Details only';
+      tags.append(tag);
+
+      const footer = document.createElement('div');
+      footer.className = 'resource-footer';
+      const fileStatus = document.createElement('span');
+      fileStatus.className = 'downloads';
+      fileStatus.textContent = resource.hasFile ? 'Document attached' : 'Resource details';
+      const openLink = document.createElement('a');
+      openLink.className = 'action-link';
+      openLink.textContent = resource.hasFile ? 'Open →' : 'View details →';
+      if (resource.hasFile) {
+        openLink.href = `${apiBaseUrl}/api/resources/${encodeURIComponent(resource._id)}/file`;
+        openLink.target = '_blank';
+        openLink.rel = 'noopener noreferrer';
+      } else {
+        openLink.href = '#';
+        openLink.dataset.resourceDetails = 'true';
+      }
+      footer.append(fileStatus, openLink);
+
+      content.append(meta, title, description, tags, footer);
+      card.append(thumb, content);
+      return card;
+    }
+
+    async function loadResources() {
+      resourceListStatus.textContent = 'Loading shared resources...';
+      resourceListStatus.className = 'form-message';
+      try {
+        const result = await apiRequest('/api/resources');
+        resourceGrid.querySelectorAll('[data-shared-resource="true"]').forEach((card) => card.remove());
+        result.resources.slice().reverse().forEach((resource) => {
+          resourceGrid.insertBefore(createResourceCard(resource), resourceGrid.firstChild);
+        });
+        resourceListStatus.textContent = result.resources.length
+          ? `Showing ${result.resources.length} resources shared by students.`
+          : 'No student uploads yet. Be the first to share a resource.';
+        resourceListStatus.className = 'form-message';
+        cards = Array.from(document.querySelectorAll('.resource-card'));
+        applyFilters();
+      } catch (error) {
+        resourceListStatus.textContent = error.message || 'Unable to load shared resources.';
+        resourceListStatus.className = 'form-message error';
+      }
     }
 
     function openModal(mode = 'login') {
@@ -1322,7 +1488,7 @@
       loginModal.setAttribute('aria-hidden', 'true');
     }
 
-    function setLoggedInState(email) {
+    function setLoggedInState(email, token) {
       const displayName = email.split('@')[0].replace(/[._-]/g, ' ');
       const formattedName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
       loginBtn.textContent = 'Log in';
@@ -1333,7 +1499,7 @@
       joinBtn.setAttribute('title', `Signed in as ${email}`);
       accountName.textContent = formattedName || 'CampusShare User';
       accountEmail.textContent = email;
-      localStorage.setItem('campusShareUser', JSON.stringify({ email }));
+      localStorage.setItem('campusShareUser', JSON.stringify({ email, token }));
     }
 
     function openAccountPanel() {
@@ -1350,17 +1516,28 @@
       accountPanel.setAttribute('aria-hidden', 'true');
     }
 
-    function restoreSession() {
+    async function restoreSession() {
       const savedUser = localStorage.getItem('campusShareUser');
       if (!savedUser) return;
 
       try {
         const user = JSON.parse(savedUser);
-        if (user.email) {
-          setLoggedInState(user.email);
+        if (user.email && user.token) {
+          const result = await apiRequest('/api/auth/me', {
+            headers: { Authorization: `Bearer ${user.token}` }
+          });
+          setLoggedInState(result.user.email, user.token);
+        } else {
+          localStorage.removeItem('campusShareUser');
         }
       } catch (error) {
-        localStorage.removeItem('campusShareUser');
+        if (error.status === 401 || error instanceof SyntaxError) {
+          localStorage.removeItem('campusShareUser');
+          return;
+        }
+        openModal('login');
+        formMessage.textContent = 'Unable to verify your session. Check your connection and log in again.';
+        formMessage.className = 'form-message error';
       }
     }
 
@@ -1369,10 +1546,16 @@
       uploadStatus.className = `status-banner show ${type}`;
     }
 
-    function submitResource() {
+    async function submitResource() {
       const title = resourceTitle.value.trim();
       const course = resourceCourse.value.trim();
       const description = resourceDescription.value.trim();
+      const file = resourceFile.files[0];
+
+      if (file && file.size > 8 * 1024 * 1024) {
+        showUploadStatus('The document must be 8 MB or smaller.', 'error');
+        return;
+      }
 
       if (!localStorage.getItem('campusShareUser')) {
         showUploadStatus('Please log in before uploading a resource.', 'error');
@@ -1385,10 +1568,39 @@
         return;
       }
 
-      showUploadStatus('Resource uploaded successfully. It is now available for your classmates.', 'success');
-      resourceTitle.value = '';
-      resourceCourse.value = '';
-      resourceDescription.value = '';
+      try {
+        const user = JSON.parse(localStorage.getItem('campusShareUser'));
+        const resourceData = new FormData();
+        resourceData.append('title', title);
+        resourceData.append('course', course);
+        resourceData.append('description', description);
+        resourceData.append('category', resourceCategory.value);
+        if (file) resourceData.append('file', file);
+
+        const result = await apiRequest('/api/resources', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${user.token}` },
+          body: resourceData
+        });
+        resourceGrid.insertBefore(createResourceCard(result.resource), resourceGrid.firstChild);
+        cards = Array.from(document.querySelectorAll('.resource-card'));
+        applyFilters();
+        resourceListStatus.textContent = 'Your resource has been added to the shared resources.';
+        resourceListStatus.className = 'form-message success';
+        showUploadStatus('Resource uploaded successfully. It is now available for your classmates.', 'success');
+        resourceTitle.value = '';
+        resourceCourse.value = '';
+        resourceDescription.value = '';
+        resourceFile.value = '';
+      } catch (error) {
+        if (error.status === 401) {
+          localStorage.removeItem('campusShareUser');
+          showUploadStatus('Your session has expired. Please log in again.', 'error');
+          openModal('login');
+          return;
+        }
+        showUploadStatus(error.message || 'Unable to upload the resource. Please try again.', 'error');
+      }
     }
 
     function logOutUser() {
@@ -1400,11 +1612,12 @@
       closeAccountPanel();
     }
 
-    function loginUser(event) {
+    async function loginUser(event) {
       event.preventDefault();
 
       const email = emailInput.value.trim();
       const password = passwordInput.value.trim();
+      const isSignup = authTitle.textContent === 'Create your account';
 
       if (!email || !password) {
         formMessage.textContent = 'Please enter both your email and password.';
@@ -1413,30 +1626,47 @@
       }
 
       const validEmail = /@.*\.(edu|ac\.in|college)$/i.test(email);
-      const validCredentials = email.toLowerCase() === 'student@campusshare.edu' && password === 'campus123';
-
       if (!validEmail) {
         formMessage.textContent = 'Use a valid college email address to continue.';
         formMessage.className = 'form-message error';
         return;
       }
 
-      if (!validCredentials) {
-        formMessage.textContent = 'Invalid login details. Try student@campusshare.edu with password campus123.';
+      try {
+        const result = await apiRequest(`/api/auth/${isSignup ? 'signup' : 'login'}`, {
+          method: 'POST',
+          body: JSON.stringify({ email, password })
+        });
+
+        setLoggedInState(result.user.email, result.token);
+        formMessage.textContent = isSignup ? 'Account created successfully. Welcome to CampusShare!' : 'Login successful. Welcome back!';
+        formMessage.className = 'form-message success';
+
+        setTimeout(() => {
+          closeModal();
+        }, 900);
+      } catch (error) {
+        formMessage.textContent = error.message || 'Unable to connect. Please try again.';
         formMessage.className = 'form-message error';
-        return;
       }
-
-      setLoggedInState(email);
-      formMessage.textContent = 'Login successful. Welcome back!';
-      formMessage.className = 'form-message success';
-
-      setTimeout(() => {
-        closeModal();
-      }, 900);
     }
 
     searchInput.addEventListener('input', applyFilters);
+    resourceGrid.querySelectorAll('.resource-card .action-link[href="#"]').forEach((link) => {
+      link.dataset.resourceDetails = 'true';
+    });
+    resourceGrid.addEventListener('click', (event) => {
+      const link = event.target.closest('[data-resource-details]');
+      if (!link) return;
+      event.preventDefault();
+      const card = link.closest('.resource-card');
+      showResourceDetails({
+        title: card.querySelector('h3').textContent,
+        course: card.querySelector('.resource-meta span').textContent,
+        category: card.dataset.category,
+        description: card.querySelector('.resource-content p').textContent
+      });
+    });
 
     filterButtons.forEach((button) => {
       button.addEventListener('click', () => {
@@ -1478,11 +1708,15 @@
 
     closeModalBtn.addEventListener('click', closeModal);
     closeAccountBtn.addEventListener('click', closeAccountPanel);
+    closeResourceModalBtn.addEventListener('click', closeResourceDetails);
     loginModal.addEventListener('click', (event) => {
       if (event.target === loginModal) closeModal();
     });
     accountPanel.addEventListener('click', (event) => {
       if (event.target === accountPanel) closeAccountPanel();
+    });
+    resourceModal.addEventListener('click', (event) => {
+      if (event.target === resourceModal) closeResourceDetails();
     });
     loginForm.addEventListener('submit', loginUser);
     logoutBtn.addEventListener('click', logOutUser);
@@ -1491,10 +1725,12 @@
       if (event.key === 'Escape') {
         if (loginModal.classList.contains('open')) closeModal();
         if (accountPanel.classList.contains('open')) closeAccountPanel();
+        if (resourceModal.classList.contains('open')) closeResourceDetails();
       }
     });
 
     restoreSession();
+    loadResources();
   </script>
 </body>
 </html>

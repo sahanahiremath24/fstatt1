@@ -1,0 +1,8 @@
+{
+  "name": "campusshare-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node fstatt1-main/server.js"
+  }
+}
